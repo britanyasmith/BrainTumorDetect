@@ -35,17 +35,24 @@ def loadFromFolder(loc, img_size):
             if img is not None: #if this is an image, then append details to the arrays
                 images.append(img)
                 labels.append(tumorType)
-    imgs = np.array(images)
-    return imgs, labels
 
-def visualizeImages(imgs, labels, title = 'Sample Brain tumor images'): 
+    data = {
+        'images': np.array(images), 
+        'labels': labels
+    }
+
+    return data
+
+def visualizeImages(imgs, labels, title): 
     '''
     Description: Plots the images (5 images)
     Output: Plotted image 
     '''
     plt.figure(figsize= (15,15))
+    _loc = [0, 1100, 1251, 2100, 1255]
     for i in range(1, 6):
-        image_loc = random.randint(0, len(imgs)) 
+        #image_loc = random.randint(0, len(imgs)) 
+        image_loc = _loc[i-1]
         plt.subplot(1, 5, i)
         plt.imshow(imgs[image_loc])  # shows the image
         plt.xlabel(labels[image_loc])    #Adds labels to the images 
@@ -55,19 +62,32 @@ def visualizeImages(imgs, labels, title = 'Sample Brain tumor images'):
 
 
             
-x_train, y_train = loadFromFolder(path_train, 300)
-x_test, y_test = loadFromFolder(path_train, 300)
+train = loadFromFolder(path_train, 300)
+test = loadFromFolder(path_train, 300)
 
-visualizeImages(x_train, y_train)   #Visualizing the images 
+visualizeImages(train['images'], train['labels'], 'Sample Brain tumor images')   #Visualizing the images 
 
 #Because the labels are categorical data, we want to perform encoding on it in order to get 
 # it in a form that it can be fed into the machine learning model 
 
-Y_train = preprocessing.LabelEncoder().fit_transform(y_train)   #ordinal encoding 
-Y_test = preprocessing.LabelEncoder().fit_transform(y_test) #ordinal encoding 
+train['labels'] = preprocessing.LabelEncoder().fit_transform(train['labels'])   #ordinal encoding 
+test['labels'] = preprocessing.LabelEncoder().fit_transform(test['labels']) #ordinal encoding 
 
 #Data Augmentation 
+data_aug = ImageDataGenerator(
+    rotation_range = 30, 
+    width_shift_range= 0.1, 
+    height_shift_range= 0.1, 
+    zoom_range = 0.2, 
+    horizontal_flip= True
+)
 
+print(train['images'][0])
+data_aug.fit(train['images'])
+data_aug.fit(test['images'])
+print(train['images'][0])
+
+visualizeImages(train['images'], train['labels'], 'Augmented Images')   #Visualizing the images 
 
 
 
