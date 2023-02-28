@@ -82,10 +82,8 @@ data_aug = ImageDataGenerator(
     horizontal_flip= True
 )
 
-print(train['images'][0])
 data_aug.fit(train['images'])
 data_aug.fit(test['images'])
-print(train['images'][0])
 
 visualizeImages(train['images'], train['labels'], 'Augmented Images')   #Visualizing the images 
 
