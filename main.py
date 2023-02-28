@@ -6,7 +6,15 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt
 import random
 import numpy as np
+
 from keras.preprocessing.image import ImageDataGenerator
+from keras.models import Sequential 
+from keras.layers import Conv2D, MaxPooling2D, Activation, Dropout, Flatten, Dense
+
+
+
+
+
 
  
 #Obtain the MRI Images and visualize them
@@ -74,16 +82,17 @@ train['labels'] = preprocessing.LabelEncoder().fit_transform(train['labels'])   
 test['labels'] = preprocessing.LabelEncoder().fit_transform(test['labels']) #ordinal encoding 
 
 #Data Augmentation 
-data_aug = ImageDataGenerator(
+datagen = ImageDataGenerator(
     rotation_range = 30, 
-    width_shift_range= 0.1, 
-    height_shift_range= 0.1, 
+    width_shift_range = 0.1, 
+    height_shift_range = 0.1, 
     zoom_range = 0.2, 
-    horizontal_flip= True
+    horizontal_flip = True, 
+    rescale=1./255
 )
 
-data_aug.fit(train['images'])
-data_aug.fit(test['images'])
+datagen.fit(train['images'])
+datagen.fit(test['images'])
 
 visualizeImages(train['images'], train['labels'], 'Augmented Images')   #Visualizing the images 
 
