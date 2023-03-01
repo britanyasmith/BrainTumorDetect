@@ -1,110 +1,43 @@
-#This is the python script where the entire operation of Brain tumor Detection is ran from 
-#from  model import Model
-import os 
-import cv2 
-from sklearn import preprocessing 
-import matplotlib.pyplot as plt
-import random
-import numpy as np
+import numpy as np  #matrix operations
+from dataHandling import TumorDataset 
+from torch.utils.data import DataLoader    #create the DataLoader class
 
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Sequential 
-from keras.layers import Conv2D, MaxPooling2D, Activation, Dropout, Flatten, Dense
+import albumentations as A  #performs data Augmentation 
+from albumentations.pytorch import ToTensorV2
+
+from support import visualization
 
 
+img_path = "tumor_dataset/"
+class_map = {"glioma_tumor": 0, 
+			"meningioma_tumor": 1, 
+			"no_tumor": 2, 
+            "pituitary_tumor": 3}
+img_dim = 300
+batch_size = 4
+num_workers = 1
+transform = A.Compose([A.Resize(height = img_dim, width = img_dim), 
+                       A.Normalize(mean=(0, 0, 0), std=(1, 1, 1)), #mean = 0, std = 1 condenses down values in range [0, 1] -> (x-mean)/std
+                       ToTensorV2() #Converts the numpy image to a tensor (required by torch for training, immutible, and backed by GPU)
 
+    ])
 
+#Load the train data and create batches from them 
+trainset = TumorDataset(img_path=img_path, 
+                        class_map=class_map, 
+                        train=True, 
+                        img_dim=img_dim, 
+                        transform = transform) #create instance of dataset and call it Train
 
+trainloader = DataLoader(trainset, 
+                         batch_size=batch_size, 
+                         shuffle=True, 
+                         num_workers=num_workers)
 
- 
-#Obtain the MRI Images and visualize them
-path_train = 'data/Training/'
-path_test = 'data/Testing/'
+# print(type(trainloader))
+# for imgs, labels in trainloader: 
+#     print(f"Batch of images has shape: {imgs.shape}")
+#     print(f"Batch of labels has shape: {labels.shape}")
+#     print(f"Minimum: {imgs.min()}, Maximum:{imgs.max()}")
 
-
-
-def loadFromFolder(loc, img_size): 
-    '''
-    Description: Function to get the data from the folders
-    Output: 
-        - images : Array with image Data
-        - labels : Array with labels of each image 
-    '''
-
-    images = [] # blank image array for the images 
-    labels = [] # blank label array for the labels 
-    alpha = 1.5 # Contrast control
-    beta = 10 # Brightness control
-
-    for tumorType in os.listdir(loc):   #cycle through the  folders that are within the dataset 
-        for filename in os.listdir(loc+tumorType): #cycle through the filenames within the tumor Folder 
-            img = cv2.resize(cv2.imread(loc+tumorType+'/'+filename), (img_size, img_size))    
-            img = cv2.convertScaleAbs(img, alpha=alpha, beta=beta) #Make the image have more contrast to better see the tumor location 
-            if img is not None: #if this is an image, then append details to the arrays
-                images.append(img)
-                labels.append(tumorType)
-
-    data = {
-        'images': np.array(images), 
-        'labels': labels
-    }
-
-    return data
-
-def visualizeImages(imgs, labels, title): 
-    '''
-    Description: Plots the images (5 images)
-    Output: Plotted image 
-    '''
-    plt.figure(figsize= (15,15))
-    _loc = [0, 1100, 1251, 2100, 1255]
-    for i in range(1, 6):
-        #image_loc = random.randint(0, len(imgs)) 
-        image_loc = _loc[i-1]
-        plt.subplot(1, 5, i)
-        plt.imshow(imgs[image_loc])  # shows the image
-        plt.xlabel(labels[image_loc])    #Adds labels to the images 
-        plt.tight_layout()  #removes overlapping 
-        plt.suptitle(f'{title}')
-    plt.show()
-
-
-            
-train = loadFromFolder(path_train, 300)
-test = loadFromFolder(path_train, 300)
-
-visualizeImages(train['images'], train['labels'], 'Sample Brain tumor images')   #Visualizing the images 
-
-#Because the labels are categorical data, we want to perform encoding on it in order to get 
-# it in a form that it can be fed into the machine learning model 
-
-train['labels'] = preprocessing.LabelEncoder().fit_transform(train['labels'])   #ordinal encoding 
-test['labels'] = preprocessing.LabelEncoder().fit_transform(test['labels']) #ordinal encoding 
-
-#Data Augmentation 
-datagen = ImageDataGenerator(
-    rotation_range = 30, 
-    width_shift_range = 0.1, 
-    height_shift_range = 0.1, 
-    zoom_range = 0.2, 
-    horizontal_flip = True, 
-    rescale=1./255
-)
-
-datagen.fit(train['images'])
-datagen.fit(test['images'])
-
-visualizeImages(train['images'], train['labels'], 'Augmented Images')   #Visualizing the images 
-
-
-
-
-
-
-
-
-
-
-
-
-
+visualization(trainloader)
