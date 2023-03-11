@@ -2,7 +2,6 @@ import torch.nn as nn
 import torch.nn.functional as F # import convolution functions like Relu
 import torch
 from torch import flatten
-from pytorchtools import EarlyStopping
 
 class TumorDetectModel(nn.Module): 
     '''Model a custom made convolutional neural network for Tumor Detection 
@@ -106,9 +105,6 @@ def fit(epochs, weight_decay, lr, model, train_loader, val_loader, device, opt_f
         model.train()
         train_losses = []
         train_acc = []
-
-        # initialize the early_stopping object
-        early_stopping = EarlyStopping(patience=10, verbose=True)
         
         for batch in train_loader: 
             optimizer.zero_grad()   #clearing the gradients of all optimized variables
