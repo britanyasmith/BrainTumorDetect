@@ -3,6 +3,7 @@ import cv2  #image processing library
 import torch    #converting data to tensors 
 from torch.utils.data import Dataset    #create the Dataset class
 from typing import Any, Callable, Optional, Tuple
+import torchvision.transforms.functional as F
 
 class TumorDataset(Dataset):
     '''Dataset Retrieval and Handling 
@@ -51,7 +52,8 @@ class TumorDataset(Dataset):
 
 
     def __len__(self): 
-        '''
+        '''Obtains the length of data 
+
         Returns: 
             int: length of the data
         
@@ -60,7 +62,8 @@ class TumorDataset(Dataset):
     
    
     def __getitem__(self, index: int) -> Tuple[Any, Any]: 
-        '''
+        '''Gets the image data and performs transforms on the data
+
         Args: 
             index (int): Index of the data
 
@@ -70,14 +73,54 @@ class TumorDataset(Dataset):
 
         img_path, class_name = self.data[index]
 
-        image = cv2.imread(img_path)    #get the image and resize it to the appropriate dimension
+        image = cv2.imread(img_path)    #get the image and resize it to the appropriate 
         if self.transform: #if transform is requested, perform transforms, otherwise do nothing
-            image = self.transform(image = image)['image']  #performs the transforms on the image and creates dict 
-
+            image = self.transform(image)  #performs the transforms      
+            
         class_id = self.class_map[class_name]
         class_id = torch.tensor([class_id]) #Gets the class id to be a tensor of shape [batch_size, label_dim]
 
         return image , class_id
 
         
+
+class FunctionalTransforms(): 
+    '''Gets the image data and performs functional transformations
+
+    Args: 
+        angle (int): angle to rotate the image
+        sharpness_factor (int): level of sharpness of the image 
+        contrast_factor (int): level of contrast of the image 
+        brightness_factor (int): level of brightness of the image 
+    '''
+
+    def __init__(self, 
+                 angle: int=0, 
+                 sharpness_factor: int=1, 
+                 contrast_factor: int=1,
+                 brightness_factor: int=1):
+        
+        self.angle = angle
+        self.sharpness_factor = sharpness_factor
+        self.contrast_factor = contrast_factor
+        self.brightness_factor = brightness_factor
+
+    def __call__(self, img: torch.tensor) -> torch.Tensor:
+        '''Perform Functional transform on images when this is called  
+
+        Args: 
+            img (torch.tensor): tensor of the image
+
+        Returns: 
+            image (torch.tensor): tensor of transformed image
+        
+        '''
+        
+        image = F.rotate(img=img, angle=self.angle)
+        image = F.adjust_sharpness(img=img, sharpness_factor=self.sharpness_factor)
+        image = F.adjust_contrast(img=img, contrast_factor=self.contrast_factor)
+        image = F.adjust_brightness(img=img, brightness_factor=self.brightness_factor)
+        #image = F.invert(image)
+
+        return image
 
