@@ -17,7 +17,7 @@ CLASS_MAP = {"glioma_tumor": 0,
 			"no_tumor": 2, 
             "pituitary_tumor": 3}
 IMG_DIM = 300
-NUM_WORKERS = 1
+NUM_WORKERS = 2
 MEASURES = {"mean": 0.1794,
             "std":  0.1885}
 TRAIN_SPLIT = 0.75
@@ -40,6 +40,7 @@ TRANSFORM = transforms.Compose([    #https://pytorch.org/vision/stable/transform
                          std=(MEASURES['std'], MEASURES['std'], MEASURES['std']))#Reduces skewness by making mean = 0, std = 1 -> (x-mean)/std
     
     ])
+
 #------------------------------------------------------------------------------------------------------------------------------------------
 
 #Load the Datasets 
